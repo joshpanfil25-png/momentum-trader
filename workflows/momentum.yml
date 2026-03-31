@@ -1,0 +1,35 @@
+name: Momentum Paper Trader
+
+on:
+  schedule:
+    - cron: '35 13 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  trade:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas
+
+      - name: Run trader
+        run: python momentum_trader.py --run-once
+
+      - name: Save portfolio state
+        run: |
+          git config user.name "Momentum Bot"
+          git config user.email "bot@noreply.github.com"
+          git add portfolio.json trade_log.json
+          git diff --cached --quiet || git commit -m "Update portfolio $(date '+%Y-%m-%d')"
+          git push
